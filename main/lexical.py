@@ -15,7 +15,7 @@ def tokenize(code):
                 "trojan", "TRUE","void", "while"
     }
 
-    reserved_symbols = {'+','-', '*', '^', '/', '//', '%', '=', '+=', '-=', '*=', '^=', '/=', '//=', '%=', '=', '!=', '>', '<', '>=', '<=','&&',
+    reserved_symbols = {'+', '-', '*', '^', '/', '//', '%', '=', '+=', '-=', '*=', '^=', '/=', '//=', '%=', '=', '!=', '>', '<', '>=', '<=','&&',
                         '||', '!', '++', '--', '(', ')', '#', '[', ']', ':'
     }
 
@@ -31,15 +31,13 @@ def tokenize(code):
     
     tok_regex = '|'.join('(?P<%s>%s)' % pair for pair in token_specification)
     line_num = 1
-    line_start = 0
     count = 0
     list_id = {}
     error = []
     for mo in re.finditer(tok_regex, code):
         kind = mo.lastgroup
         value = mo.group()
-        line_num = mo.start()
-        column = mo.start() - line_start
+        column = mo.span()
         if kind == 'functions':
             kind = value
         elif kind == 'digits':
@@ -50,16 +48,14 @@ def tokenize(code):
                 kind = 'dec_lit'
                 value = float(value)
             else:
-                #error.append("Lexical Error: Integer/Decimal is out of bounds")
-                pass
-        elif kind == 'int_lit':
-            value = int(value)
-        elif kind == 'deci_lit':
-            value = float(value)
+                error.append("Lexical Error at Line: "+ str(line_num) +  " Column: " + str(column) + ": Integer/Decimal is out of bounds")
+                kind = 'invalid'
+                value = 'invalid'
         elif kind == 'id':
             if len(value) > 20:
-                #error.append("Lexical Error: Maximum character for identifiers is 20")
-                pass
+                error.append("Lexical Error at Line "+ str(line_num) +  " Column" + str(column) + ": Maximum character for identifiers is 20")
+                kind = 'invalid'
+                value = 'invalid'
             elif value in keywords:
                 kind = value
             elif value in list_id.values():
@@ -74,11 +70,11 @@ def tokenize(code):
         elif value in reserved_symbols:
             kind = value
         elif kind == 'newline':
-            line_start = mo.end()
             line_num += 1
             continue
         elif kind == 'whitespace':
-            kind == 'whitespace'
+            value = 'whitespace'
         elif kind == 'mismatch':
             raise RuntimeError(f'{value!r} unexpected on line {line_num}')
+
         yield Token(kind, value, line_num, column, error)
