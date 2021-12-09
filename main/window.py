@@ -5,7 +5,9 @@ def btn_clicked():
     print("Button Clicked")
 
 def lexical_analyzer():
+    error.config(state='normal')
     output.config(state='normal')
+    error.delete('1.0', END)
     output.delete('1.0', END)
     output_title.delete('1.0', END)
     output_title.config(state='disabled')
@@ -18,7 +20,10 @@ def lexical_analyzer():
         #     pass
         # else:
         output.insert(END,str(token.value) + '\t\t\t\t' + str(token.type) + '\n')
+        if token.value == 'invalid':
+            error.insert(END,str(token.error) + '\n')
     output.config(state='disabled')
+    error.config(state='disabled')
 
 window = Tk()
 
@@ -58,13 +63,29 @@ output = Text(
     highlightthickness = 0,
     padx=10,
     pady=10,
-    font = ("Roboto Mono", 8)
+    font = ("Roboto Mono", 8),
+    state='disabled'
 )
 
 output.place(
     x = 532.0, y = 79,
     width = 420.0,
     height = 493)
+
+error = Text(
+    bd = 0,
+    bg = "#ffffff",
+    highlightthickness = 0,
+    padx=10,
+    pady=10,
+    font = ("Roboto Mono", 8),
+    state='disabled'
+)
+
+error.place(
+    x = 46.0, y = 339,
+    width = 430.0,
+    height = 233)
     
 # entry0 = Entry(
 #     bd = 0,
