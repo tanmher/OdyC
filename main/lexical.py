@@ -83,9 +83,6 @@ def tokenize(code):
             newline_count += 1
             tab_count = value.count('\t')
             indent_count.append(tab_count)
-            print(indent_count)
-            print(line_num)
-            print(tab_count)
             if '\n' in value and '\t' in value and tab_count == indent_count[line_num-1]+1:
                 kind = ':'
                 value = ':'
