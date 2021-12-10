@@ -11,17 +11,12 @@ def lexical_analyzer():
     output.delete('1.0', END)
     output_title.delete('1.0', END)
     output_title.config(state='disabled')
-    output.insert(END, 'LEXEME\t\t\t\tTOKEN\n')
+    output.insert(END, 'LEXEME \t\t\t\t TOKEN\n')
     input = entry1.get("1.0",END)
     for token in lexical.tokenize(input):
-        # if str(token.type) == 'newline':
-        #     pass
-        # elif str(token.type) == 'whitespace':
-        #     pass
-        # else:
-        output.insert(END,str(token.value) + '\t\t\t\t' + str(token.type) + '\n')
-        if token.value == 'invalid':
-            error.insert(END,str(token.error) + '\n')
+        output.insert(END, f'{token.value} \t\t\t\t {token.type} \n')
+        if token.type == 'invalid':
+            error.insert(END, f'{token.value} -> {token.error} \n')
     output.config(state='disabled')
     error.config(state='disabled')
 
