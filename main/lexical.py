@@ -25,7 +25,7 @@ def tokenize(code):
         ('id',          r'[A-Za-z0-9]+'),           # Identifiers
         ('string',      r'\"[ -~][ -~]+\"'),        # String Literals
         ('operator',    r'[+\-*^/%&\|=\(\)]+'),     # Operators
-        ('start',       r':+(\n\t+)+'),             # Start of code block 
+        ('start',       r':+(\n[ \t]+)+'),          # Start of code block 
         ('newline',     r'\n'),                     # New line
         ('whitespace',  r'[ \t]+'),                 # Skip over spaces and tabs
         ('mismatch',    r'.'),                      # Any other character
@@ -80,10 +80,14 @@ def tokenize(code):
                 kind = value
         elif kind == 'start':
             cb_count += 1
-            newline_count += 1
             tab_count = value.count('\t')
+            if value.count(' ') == 4:
+                tab_count+=1
+                
             indent_count.append(tab_count)
-            if '\n' in value and '\t' in value and tab_count == indent_count[line_num-1]+1:
+            print(line_num)
+            print(indent_count)
+            if '\n' in value and ('\t' in value or ' ' in value) and tab_count == indent_count[line_num-1]+1:
                 kind = ':'
                 value = ':'
                 line_num += 1
@@ -96,9 +100,14 @@ def tokenize(code):
             line_num += 1
             continue
         elif kind == 'whitespace':
+            tab_count = 0
             if '\t' in value:
                 tab_count = value.count('\t')
+            if value.count(' ') == 4:
+                tab_count+=1
+            if tab_count > 0 | tab_count == indent_count[line_num-1]:
                 indent_count.append(tab_count)
+            
             value = 'whitespace'
         elif kind == 'mismatch':
             error = f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value'
