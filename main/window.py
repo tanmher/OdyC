@@ -1,8 +1,6 @@
 from tkinter import *
 import lexical 
-
-def btn_clicked():
-    print("Button Clicked")
+import classlist
 
 def lexical_analyzer():
     error.config(state='normal')
@@ -13,10 +11,39 @@ def lexical_analyzer():
     output_title.config(state='disabled')
     output.insert(END, 'LEXEME \t\t\t\t TOKEN\n')
     input = entry1.get("1.0",END)
-    for token in lexical.tokenize(input):
-        output.insert(END, f'{token.value} \t\t\t\t {token.type} \n')
-        if token.type == 'invalid':
-            error.insert(END, f'{token.value} -> {token.error} \n')
+    
+    # for token in classlist.list_tokens(input):
+    #     count +=1
+    #     if token.type[count+1] == 'invalid':
+    #         error.insert(END, f'{token.value, token.value[count+1]} -> {token.error} \n')
+    #     else:
+    #         output.insert(END, f'{token.value} \t\t\t\t {token.type} \n')
+    
+    # count = 0
+    # for (type, value, er) in zip(tokens.type, tokens.value, tokens.error):
+    #     count+=1
+    #     if type == 'invalid' or type[count+1] == 'invalid':
+    #         if er is None:
+    #             er = 'Unexpected Value'
+    #         error.insert(END, f'{value} -> {er} \n')
+    #     else:
+    #         output.insert(END, f'{value} \t\t\t\t {type} \n')
+    
+    tokens = classlist.list_tokens(input)
+
+    for (kind, val, er) in zip(tokens.type, tokens.value, tokens.error):
+        if kind == 'invalid':
+            error.insert(END, f'{val} -> {er} \n')
+        elif kind != 'invalid' and kind != 'whitespace':
+            output.insert(END, f'{val} \t\t\t\t {kind} \n')
+
+
+    # for token in lexical.tokenize(input):
+    #     if token.type == 'invalid':
+    #         error.insert(END, f'{token.value} -> {token.error} \n')
+    #     elif token.type != 'invalid' and token.type != 'whitespace':
+    #         output.insert(END, f'{token.value} \t\t\t\t {token.type} \n')
+
     output.config(state='disabled')
     error.config(state='disabled')
 
