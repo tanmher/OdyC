@@ -83,12 +83,13 @@ def tokenize(code):
                 kind = 'invalid'
             else:
                 kind = value
-        elif kind == "codeblock":
+        elif kind == "code_block":
             kind = ':'
         
         elif kind == 'start':
             tab_count = value.count('\t')
             indent_count.append(tab_count)
+
             if '\n' in value and '\t' in value  and tab_count == indent_count[line_num-1]+1:
                 kind = ':'
                 value = ':'
