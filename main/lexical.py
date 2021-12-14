@@ -24,15 +24,17 @@ def tokenize(code):
 
     
     token_specification = [
-        ('functions',   r'[A-Za-z]+[0-9]*\(\)'),       # Functions
-        ('digits',      r'\d+(\.\d*)?'),            # Integer or decimal number
-        ('id',          r'[A-Za-z0-9]+'),           # Identifiers
-        ('string',      r'\"[ -~][ -~]+\"'),        # String Literals
-        ('operator',    r'[+\-*^/%&\|=\(\),]+'),     # Operators
-        ('start',       r':+(\n[ \t]+)+'),          # Start of code block 
-        ('newline',     r'\n'),                     # New line
-        ('whitespace',  r'[ \t]+'),                 # Skip over spaces and tabs
-        ('mismatch',    r'.'),                      # Any other character
+        ('functions',   r'[A-Za-z]+[0-9]*\(\)'),            # Functions
+        ('digits',      r'\d+(\.\d*)?'),                    # Integer or decimal number
+        ('id',          r'[A-Za-z0-9]+'),                   # Identifiers
+        ('string',      r'\"[ -~][ -~]+\"'),                # String Literals
+        ('symbols',    r'[+\-*^/%&\|=\(\),\[\]\{\}><]+'),   # Operators
+        #('start',       r':+(\n[ \t]+)+'),                  # Start of code block 
+        ('code_block',  r':'),                               # Start of code block 
+        ('newline',     r'\n'),                             # New line
+        ('whitespace',  r'[ \t]+'),                         # Skip over spaces and tabs
+        ('comment',     r'#'),                              # Comment
+        ('mismatch',    r'.'),                              # Any other character
     ]
     
     tok_regex = '|'.join('(?P<%s>%s)' % pair for pair in token_specification)
@@ -75,22 +77,19 @@ def tokenize(code):
                 count+=1
                 kind = 'id' + str(count)
                 list_id[kind] = value 
-        elif kind == 'operator':
+        elif kind == 'symbols':
             if len(value) > 2: 
                 error = f'Lexical Error at Line: {line_num} Column: {column}: Invalid operator'
                 kind = 'invalid'
             else:
                 kind = value
-        elif kind == 'start':
-            cb_count += 1
-            tab_count = value.count('\t')
-            if value.count(' ') == 4:
-                tab_count+=1
+        elif kind == "codeblock":
+            kind = ':'
         
+        elif kind == 'start':
+            tab_count = value.count('\t')
             indent_count.append(tab_count)
-            print(line_num)
-            print(indent_count)
-            if '\n' in value and ('\t' in value or ' ' in value) and tab_count == indent_count[line_num-1]+1:
+            if '\n' in value and '\t' in value  and tab_count == indent_count[line_num-1]+1:
                 kind = ':'
                 value = ':'
                 line_num += 1
@@ -98,18 +97,40 @@ def tokenize(code):
                 error = f'Lexical Error at Line: {line_num} Column: {column}: Block must be in newline and indented'
                 kind = 'invalid'
                 value = ':'
+
+        #     cb_count += 1
+        #     tab_count = value.count('\t')
+        #     if value.count(' ') == 4:
+        #         tab_count+=1
+        
+        #     indent_count.append(tab_count)
+        #     if '\n' in value and ('\t' in value or ' ' in value) and tab_count == indent_count[line_num-1]+1:
+        #         kind = ':'
+        #         value = ':'
+        #         line_num += 1
+
+        #     if '\n' in value and ('\t' in value or ' ' in value):
+        #         kind = ':'
+        #         value = ':'
+        #     else:
+        #         error = f'Lexical Error at Line: {line_num} Column: {column}: Block must be in newline and indented'
+        #         kind = 'invalid'
+        #         value = ':'
         elif kind == 'newline':
             line_start = mo.end()
             line_num += 1
             continue
         elif kind == 'whitespace':
+
             tab_count = 0
             if '\t' in value:
                 tab_count = value.count('\t')
-            if value.count(' ') == 4:
-                tab_count+=1
-            if tab_count > 0 | tab_count == indent_count[line_num-1]:
-                indent_count.append(tab_count)
+            indent_count.append(tab_count)
+            
+            # if value.count(' ') == 4:
+            #     tab_count+=1
+            # if tab_count > 0 | tab_count == indent_count[line_num-1]:
+            #     indent_count.append(tab_count)
             
             value = 'whitespace'
         elif kind == 'mismatch':
