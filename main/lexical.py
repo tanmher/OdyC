@@ -1,5 +1,6 @@
 from typing import NamedTuple
 import re
+import classlist
 
 class Token(NamedTuple):
     type: str
@@ -19,12 +20,15 @@ def tokenize(code):
     #                     '||', '!', '++', '--', '(', ')', '#', '[', ']', ':'
     # }
 
+    # operators = {'+', '-', '*', '^', '/', '%', '&', '|', '=', '(', ')'}
+
+    
     token_specification = [
-        ('functions',   r'[A-Za-z0-9]+\(\)'),       # Functions
+        ('functions',   r'[A-Za-z]+[0-9]*\(\)'),       # Functions
         ('digits',      r'\d+(\.\d*)?'),            # Integer or decimal number
         ('id',          r'[A-Za-z0-9]+'),           # Identifiers
         ('string',      r'\"[ -~][ -~]+\"'),        # String Literals
-        ('operator',    r'[+\-*^/%&\|=\(\)]+'),     # Operators
+        ('operator',    r'[+\-*^/%&\|=\(\),]+'),     # Operators
         ('start',       r':+(\n[ \t]+)+'),          # Start of code block 
         ('newline',     r'\n'),                     # New line
         ('whitespace',  r'[ \t]+'),                 # Skip over spaces and tabs
@@ -38,7 +42,6 @@ def tokenize(code):
     line_start = 0
     error = ''
     cb_count = 0
-    newline_count = 0
     indent_count = []
     for mo in re.finditer(tok_regex, code):
         kind = mo.lastgroup
@@ -48,11 +51,11 @@ def tokenize(code):
             kind = value
             indent_count.append(0) #FOR NOW TO SOLVE ERROR IN USER DEFINED FUNCTIONS
         elif kind == 'digits':
-            if len(value) <= 9 and len(value) >= 1 and '.' not in value:
-                kind = 'int_lit'
+            if len(value) <= 10 and len(value) >= 1 and '.' not in value:
+                kind = 'digit_lit'
                 value = int(value)
-            elif len(value) <= 13 and len(value) >= 3 and '.' in value:
-                kind = 'dec_lit'
+            elif len(value) <= 15 and len(value) >= 3 and '.' in value:
+                kind = 'float_lit'
                 value = float(value)
             else:
                 error = f'Lexical Error at Line: {line_num}  Column: {column} : Integer/Decimal is out of bounds'
@@ -63,7 +66,7 @@ def tokenize(code):
                 kind = 'invalid'
             elif value in keywords:
                 kind = value
-            elif value in list_id.values():
+            elif value in list_id.values(): 
                 for key, val in list_id.items():
                     if val == value:
                         id = key
@@ -73,7 +76,7 @@ def tokenize(code):
                 kind = 'id' + str(count)
                 list_id[kind] = value 
         elif kind == 'operator':
-            if len(value) > 2:
+            if len(value) > 2: 
                 error = f'Lexical Error at Line: {line_num} Column: {column}: Invalid operator'
                 kind = 'invalid'
             else:
@@ -83,7 +86,7 @@ def tokenize(code):
             tab_count = value.count('\t')
             if value.count(' ') == 4:
                 tab_count+=1
-                
+        
             indent_count.append(tab_count)
             print(line_num)
             print(indent_count)
