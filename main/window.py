@@ -12,25 +12,8 @@ def lexical_analyzer():
     output.insert(END, 'LEXEME \t\t\t\t TOKEN\n')
     input = entry1.get("1.0",END)
     
-    # for token in classlist.list_tokens(input):
-    #     count +=1
-    #     if token.type[count+1] == 'invalid':
-    #         error.insert(END, f'{token.value, token.value[count+1]} -> {token.error} \n')
-    #     else:
-    #         output.insert(END, f'{token.value} \t\t\t\t {token.type} \n')
-    
-    # count = 0
-    # for (type, value, er) in zip(tokens.type, tokens.value, tokens.error):
-    #     count+=1
-    #     if type == 'invalid' or type[count+1] == 'invalid':
-    #         if er is None:
-    #             er = 'Unexpected Value'
-    #         error.insert(END, f'{value} -> {er} \n')
-    #     else:
-    #         output.insert(END, f'{value} \t\t\t\t {type} \n')
-    
     tokens = classlist.list_tokens(input)
-
+    #tokens.error_trap()
     for (kind, val, er) in zip(tokens.type, tokens.value, tokens.error):
         if kind == 'invalid':
             error.insert(END, f'{val} -> {er} \n')
