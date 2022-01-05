@@ -24,7 +24,7 @@ def lexical_analyzer():
     for token in lexical.tokenize(input):
         if token.type == 'invalid':
             error.insert(END, f'{token.value} -> {token.error} \n')
-        elif token.type != 'invalid' and token.type != 'whitespace':
+        elif token.type != 'invalid' and (token.type != 'whitespace' and token.type != 'newline'):
             output.insert(END, f'{token.value} \t\t\t\t {token.type} \n')
 
     output.config(state='disabled')
