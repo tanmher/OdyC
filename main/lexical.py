@@ -1,6 +1,7 @@
 from typing import NamedTuple
 import re
 import classlist
+import string
 
 class Token(NamedTuple):
     type: str
@@ -10,25 +11,30 @@ class Token(NamedTuple):
     error: str
 
 def tokenize(code):
+    L_type = []
+    L_specification = []
+    L_value = []
+    L_line = []
+    L_column = []
+    L_error = []
+
     keywords = {"boolean", "boot","break", "continue", "digit","if", "elif", "else",
                 "embark", "FALSE", "float", "for", "global", "group", "if", "index",
                 "in","pair","parallel","read","remove","return", "skip","string",
                 "trojan", "TRUE","void", "while"
     }
 
-    # reserved_symbols = {'+', '-', '*', '^', '/', '//', '%', '=', '+=', '-=', '*=', '^=', '/=', '//=', '%=', '=', '!=', '>', '<', '>=', '<=','&&',
-    #                     '||', '!', '++', '--', '(', ')', '#', '[', ']', ':'
-    # }
+    reserved_symbols = {'+', '-', '*', '^', '/', '//', '%', '=','==', '+=', '-=', '*=', '^=', '/=', '//=', '%=', '=', '!=', '>', '<', '>=', '<=','&&',
+                        '||', '!', '++', '--', '(', ')', '#', '[', ']', ':'
+    }
 
-    # operators = {'+', '-', '*', '^', '/', '%', '&', '|', '=', '(', ')'}
 
-    
     token_specification = [
-        ('functions',   r'[A-Za-z]+[0-9]*\(\)'),            # Functions
         ('digits',      r'\d+(\.\d*)?'),                    # Integer or decimal number
         ('id',          r'[A-Za-z0-9]+'),                   # Identifiers
-        ('string',      r'\"[ -~][ -~]+\"'),                # String Literals
-        ('symbols',    r'[+\-*^/%&\|=\(\),\[\]\{\}><]+'),   # Operators
+        ('string_lit',  r'\"[ -~][ -~]+\"'),                # String Literals
+        ('operators',    r'[+\-*^/%&\|=,><]+'),   # Operators
+        ('close',       r'[\(\)\[\]\{\}]'),
         #('start',       r':+(\n[ \t]+)+'),                  # Start of code block 
         ('code_block',  r':'),                               # Start of code block 
         ('newline',     r'\n'),                             # New line
@@ -42,13 +48,15 @@ def tokenize(code):
     count = 0
     list_id = {}
     line_start = 0
-    error = ''
     cb_count = 0
     indent_count = []
     for mo in re.finditer(tok_regex, code):
         kind = mo.lastgroup
+        error = ''
         value = mo.group()
         column = mo.start() - line_start
+        L_specification.append(kind)
+
         if kind == 'functions':
             kind = value
             indent_count.append(0) #FOR NOW TO SOLVE ERROR IN USER DEFINED FUNCTIONS
@@ -77,15 +85,17 @@ def tokenize(code):
                 count+=1
                 kind = 'id' + str(count)
                 list_id[kind] = value 
-        elif kind == 'symbols':
-            if len(value) > 2: 
+        elif kind == 'operators' and value in reserved_symbols:
+            if value not in reserved_symbols:
                 error = f'Lexical Error at Line: {line_num} Column: {column}: Invalid operator'
                 kind = 'invalid'
             else:
                 kind = value
+
+        elif kind == 'close' and value in reserved_symbols:
+            kind = value
         elif kind == "code_block":
             kind = ':'
-        
         elif kind == 'start':
             tab_count = value.count('\t')
             indent_count.append(tab_count)
@@ -120,6 +130,8 @@ def tokenize(code):
         elif kind == 'newline':
             line_start = mo.end()
             line_num += 1
+            kind = 'newline'
+            value = '\n'
             continue
         elif kind == 'whitespace':
 
@@ -133,10 +145,147 @@ def tokenize(code):
             # if tab_count > 0 | tab_count == indent_count[line_num-1]:
             #     indent_count.append(tab_count)
             
-            value = 'whitespace'
+            value = ' '
         elif kind == 'mismatch':
             error = f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value'
             kind = 'invalid'
             # raise RuntimeError(f'{value} unexpected on line {line_num}')
 
-        yield Token(kind, value, line_num, column, error)
+        L_type.append(kind)
+        L_value.append(value)
+        L_line.append(line_num)
+        L_column.append(column)
+        L_error.append(error)
+    
+
+    delimiters = {
+        "whitespace": [" ", '\t', "\n"],
+        "start_block": ":",
+        "start_delim": [" ", '\t', "\n", ":", "("],
+        "return_delim": [" ", '\t', "\n", "("],
+        "arith_delim":[" ", '\t', "\n", "(", "digit_lit", "float_lit"],
+        "relation_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit"],
+        "equal_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit", "{"],
+        "assign_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit", "\""],
+
+        "openp_delim": [" ", "~", "\"", "+", "-", "(", ")", "!" , "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", 
+                        "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "4", "8", "6"],
+        "closep_delim": [" ", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", ")", ":", "]"],
+        
+        "openb_delim": [" ", "+", "-", "(", "]", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", 
+                        "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "4", "8", "6"],
+        "closeb_delim": [" ", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", "["],
+
+        "openc_delim": [" ", '\t', "\n", "\""],
+        "closec_delim": [" ", '\t', "\n",],
+
+        "id_delim": [" ", '\t', "\n", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", "[", "(","==", '+=', '-=', '*=', '^=', '/=', '//=', '%=', '!=', '>=', '<=','&&','||'],
+        
+        "terminator_delim": [" ", '\t', "\n", "lowercase", "+", "-", "!", "#","(", ")",";"],
+
+        "digit_delim": [" ", '\t', "\n", "=","+","-","^","*","%","//","/", ")", "}", "]"],
+        "bool_delim": [" ", '\t', "\n", ",", "}", ")"],
+        "str_delim": [" ", '\t', "\n", ",", "}", ")", "+", "]"],
+        "ascii": string.printable
+    }
+
+    count = 0
+    temp_type = L_type
+    temp_error = L_error
+    for (type, value, line_num, column, er, specification) in zip(L_type, L_value, L_line, L_column, L_error, L_specification):
+        if L_value[-1] == value:
+            pass
+        elif (type == "digit_lit" or type == "float_lit") and str(L_value[count+1]) in delimiters["digit_delim"]:
+            pass
+
+        elif type in keywords:
+            if (value == "break" or value == "continue" or value == "global" or value == "group" or value == "in" or value == "group" or value == "void") \
+            and (L_value[count+1] in delimiters["whitespace"] or L_value[count+1] in list_id):
+                pass
+            elif (value == "boolean" or value == "digit" or value == "float" or value == "read" or value == "embark" or value == "string" or value == "trojan") \
+            and L_value[count+1] == "(":
+                pass
+            elif (value == "elif" or value == "for" or value == "if" or value == "pair" or value == "parallel" or value == "while" or value == "route") \
+            and L_value[count+1] in delimiters["start_delim"]:
+                pass
+    
+            elif (value == "FALSE" or value == "TRUE") and L_value[count+1] in delimiters["bool_delim"]:
+                pass
+            elif value == "else" and L_value[count+1] in delimiters["start_block"]:
+                pass
+            elif value == "index" and L_value[count+1] == " ":
+                pass
+            else:
+                temp_type[count] = "invalid"
+                #temp_type = [a.replace(value, "invalid") for a in L_type]
+                L_type = temp_type
+                temp_error[count] = f'Lexical Error at Line: {line_num} Column: {column}: Found an unexpected value after this token'
+                #temp_error = [e.replace(L_error[count], f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value') for e in L_error]
+                L_error = temp_error
+
+        elif value in reserved_symbols:
+            if (value == "+" or value == "-" or value == "*" or value == "^" or value == "/" or value == "%" or value == ">" or value == "<" or value == "!" ) \
+            and (L_value[count+1] in delimiters["arith_delim"] or L_value[count+1] in list_id):
+                pass
+            elif (value == "++" or value == "--" or value == "^=" or value == "/=" or value == "%=" or value == ">=" or value == "<=" or value == "!="  or value =='&&' or value =='||') \
+            and (L_value[count+1] in delimiters["arith_delim"] or L_value[count+1] in list_id):
+                pass
+            elif (value == "=" or value == "==") and (L_value[count+1] in delimiters["equal_delim"] or L_type[count+1] in list_id):
+                pass
+            elif value == "[" and L_value[count+1] in delimiters["openb_delim"]:
+                pass
+            elif value == "]" and L_value[count+1] in delimiters["closeb_delim"]:
+                pass
+            elif value == "(" and L_value[count+1] in delimiters["openp_delim"]:
+                pass
+            elif value == ")" and L_value[count+1] in delimiters["closep_delim"]:
+                pass
+            elif value == "{" and L_value[count+1] in delimiters["openc_delim"]:
+                pass
+            elif value == "}" and L_value[count+1] in delimiters["closec_delim"]:
+                pass
+            elif value == "'" and L_value[count+1] in delimiters["closec_delim"]:
+                pass
+            elif value == "\"" and L_value[count+1] in delimiters["ascii"]:
+                pass
+            elif type == ":" and (L_value[count+1] == '\n' or L_value[count+1] == ' ' or L_value[count+1] == '\t'):
+                pass
+            else:
+                temp_type[count] = "invalid"
+                #temp_type = [a.replace(value, "invalid") for a in L_type]
+                L_type = temp_type
+                temp_error[count] = f'Lexical Error at Line: {line_num} Column: {column}: Found an unexpected value after this token'
+                #temp_error = [e.replace(L_error[count], f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value') for e in L_error]
+                L_error = temp_error
+
+        elif type in list_id and L_value[count+1] in delimiters["id_delim"]:
+            pass
+        elif value == " ":
+            pass
+        elif type == "comment" and L_type[count+1] != 'newline':
+            L_type[count+1] = "comment"
+
+        # if value[-1] == value:
+        #     if type == ":" and (L_value[count+1] == '\n' or L_value[count+1] != ' '):
+        #         pass
+        #     else:
+        #         L_type = "invalid"
+        #         L_error =  f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value'
+        # else:
+        #     pass
+        elif type == "invalid":
+            pass
+        else:
+            temp_type[count] = "invalid"
+            #temp_type = [a.replace(value, "invalid") for a in L_type]
+            L_type = temp_type
+            temp_error[count] = f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value'
+            #temp_error = [e.replace(L_error[count], f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value') for e in L_error]
+            L_error = temp_error
+
+        
+        yield Token(L_type[count], L_value[count], L_line[count], L_column[count], L_error[count])
+        
+        count+=1
+
+    
