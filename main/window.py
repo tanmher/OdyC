@@ -12,20 +12,20 @@ def lexical_analyzer():
     output.insert(END, 'LEXEME \t\t\t\t TOKEN\n')
     input = entry1.get("1.0",END)
     
-    tokens = classlist.list_tokens(input)
-    #tokens.error_trap()
-    for (kind, val, er) in zip(tokens.type, tokens.value, tokens.error):
-        if kind == 'invalid':
-            error.insert(END, f'{val} -> {er} \n')
-        elif kind != 'invalid' and kind != 'whitespace':
-            output.insert(END, f'{val} \t\t\t\t {kind} \n')
+    # tokens = classlist.list_tokens(input)
+    # tokens = lexical.error_trap(lexical.tokenize(input))
+    # for (kind, val, er) in zip(tokens.type, tokens.value, tokens.error):
+    #     if kind == 'invalid':
+    #         error.insert(END, f'{val} -> {er} \n')
+    #     elif kind != 'invalid' and kind != 'whitespace':
+    #         output.insert(END, f'{val} \t\t\t\t {kind} \n')
 
 
-    # for token in lexical.tokenize(input):
-    #     if token.type == 'invalid':
-    #         error.insert(END, f'{token.value} -> {token.error} \n')
-    #     elif token.type != 'invalid' and token.type != 'whitespace':
-    #         output.insert(END, f'{token.value} \t\t\t\t {token.type} \n')
+    for token in lexical.tokenize(input):
+        if token.type == 'invalid':
+            error.insert(END, f'{token.value} -> {token.error} \n')
+        elif token.type != 'invalid' and token.type != 'whitespace':
+            output.insert(END, f'{token.value} \t\t\t\t {token.type} \n')
 
     output.config(state='disabled')
     error.config(state='disabled')

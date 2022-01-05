@@ -22,7 +22,6 @@ delimiters = {
 }
 
 class list_tokens():
-
     def __init__(self, expression):
         self.type = []
         self.value = []
@@ -42,7 +41,7 @@ class list_tokens():
         count = 0
         for (type, value, line_num, column, er) in zip(self.type, self.value, self.line, self.column, self.error):
             count+=1
-            if (type == "digit_lit" or type == "float_lit") and value[count+1] in delimiters["digit_delim"]:
+            if (type == "digit_lit" or type == "float_lit") and str(value[count+1]) in delimiters["digit_delim"]:
                 pass
             else:
                 self.type = "invalid"
@@ -63,12 +62,15 @@ class list_tokens():
                     self.type = "invalid"
                     self.error =  f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value'
 
-                if (value == "elif" | value == "for" | value == "if" | value == "pair" | value == "parallel" | value == "while" | value == "route") \
-                and value[count+1] == delimiters["start_delim"]:
-                    pass
+                if value[-1] is not None:
+                    if (value == "elif" | value == "for" | value == "if" | value == "pair" | value == "parallel" | value == "while" | value == "route") \
+                    and value[count+1] == delimiters["start_delim"]:
+                        pass
+                    else:
+                        self.type = "invalid"
+                        self.error =  f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value'
                 else:
-                    self.type = "invalid"
-                    self.error =  f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value'
+                    pass
 
                 if (value == "FALSE" | value == "TRUE") and value[count+1] == delimiters["bool_delim"]:
                     pass
@@ -94,12 +96,20 @@ class list_tokens():
                 else:
                     self.type = "invalid"
                     self.error =  f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value'
-                
+            
+            
             if type == "comment" and (value[count+1] != '\n' or value[count+1] != '#'):
                 self.type = "comment"
 
-            if type == ":" and (value[count+1] == '\n' or value[count+1] != ' '):
-                pass
+            if value[-1] == value:
+                if type == ":" and (value[count+1] == '\n' or value[count+1] != ' '):
+                    pass
+                else:
+                        self.type = "invalid"
+                        self.error =  f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value'
             else:
-                    self.type = "invalid"
-                    self.error =  f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value'
+                pass
+
+            if type == "invalid":
+                pass
+            
