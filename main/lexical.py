@@ -19,9 +19,9 @@ def tokenize(code):
     L_error = []
 
     keywords = {"boolean", "boot","break", "continue", "digit","if", "elif", "else",
-                "embark", "FALSE", "float", "for", "global", "group", "if", "index",
-                "in","pair","parallel","read","remove","return", "skip","string",
-                "trojan", "TRUE","void", "while"
+                "embark", "FALSE", "fixed", "float", "for", "global", "group", "if", "index",
+                "in", "pair", "parallel", "read","remove", "return", "skip", "string",
+                "trojan", "TRUE", "void", "while"
     }
 
     reserved_symbols = {'+', '-', '*', '^', '/', '//', '%', '=','==', '+=', '-=', '*=', '^=', '/=', '//=', '%=', '=', '!=', '>', '<', '>=', '<=','&&',
@@ -162,17 +162,17 @@ def tokenize(code):
         "start_block": ":",
         "start_delim": [" ", '\t', "\n", ":", "("],
         "return_delim": [" ", '\t', "\n", "("],
-        "arith_delim":[" ", '\t', "\n", "(", "digit_lit", "float_lit"],
-        "relation_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit"],
-        "equal_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit", "{"],
-        "assign_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit", "\""],
+        "arith_delim":[" ", '\t', "\n", "(", "digit_lit", "float_lit"], # add identifiers
+        "relation_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit"], # add identifiers
+        "equal_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit", "{"], # add identifiers
+        "assign_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit", "\""],  # add identifiers
 
         "openp_delim": [" ", "~", "\"", "+", "-", "(", ")", "!" , "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", 
                         "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "4", "8", "6"],
         "closep_delim": [" ", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", ")", ":", "]"],
         
         "openb_delim": [" ", "+", "-", "(", "]", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", 
-                        "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "4", "8", "6"],
+                        "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "4", "8", "6"], # add literals (digit, float, string, bool)
         "closeb_delim": [" ", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", "["],
 
         "openc_delim": [" ", '\t', "\n", "\""],
@@ -192,12 +192,9 @@ def tokenize(code):
     count = 0
     temp_type = L_type
     temp_error = L_error
-    print(L_value)
-    print(L_type)
-    print(L_value[-1])
     for (type, value, line_num, column, er, specification) in zip(L_type, L_value, L_line, L_column, L_error, L_specification):
         
-        if L_value[-2] == value:
+        if L_value[-2] == L_value[count]:
             pass
         elif type == "digit_lit"  and (L_value[count+1] in delimiters["digit_delim"] or L_value[count+1] == "\n"):
             pass
@@ -231,10 +228,10 @@ def tokenize(code):
 
         elif value in reserved_symbols:
             if (value == "+" or value == "-" or value == "*" or value == "^" or value == "/" or value == "%" or value == ">" or value == "<" or value == "!" ) \
-            and (L_value[count+1] in delimiters["arith_delim"] or L_type[count+1] in list_id):
+            and (L_value[count+1] in delimiters["arith_delim"] or L_type[count+1] in list_id or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit"):
                 pass
             elif (value == "++" or value == "--" or value == "+=" or value == "-=" or value == "*=" or value == "^=" or value == "/=" or value == "%=" or value == ">=" or value == "<=" or value == "!="  or value =='&&' or value =='||') \
-            and (L_value[count+1] in delimiters["arith_delim"] or L_type[count+1] in list_id):
+            and (L_value[count+1] in delimiters["arith_delim"] or L_type[count+1] in list_id or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit"):
                 pass
             elif (value == "=" or value == "==") and (L_value[count+1] in delimiters["equal_delim"] or L_type[count+1] in list_id or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit"):
                 pass
