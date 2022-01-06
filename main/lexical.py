@@ -3,6 +3,8 @@ import re
 import classlist
 import string
 
+'''This is a multiline comment.'''
+
 class Token(NamedTuple):
     type: str
     value: str
@@ -39,7 +41,8 @@ def tokenize(code):
         ('code_block',  r':'),                               # Start of code block 
         ('newline',     r'\n'),                             # New line
         ('whitespace',  r'[ \t]+'),                         # Skip over spaces and tabs
-        ('comment',     r'#[ -~][ -~]+'),                              # Comment
+        ('comment',      r'#[^#\n]+'),
+        ('multi_comment',r'###[ -~\n]+###'),                 # Comment
         ('mismatch',    r'.'),                              # Any other character
     ]
     
@@ -96,7 +99,7 @@ def tokenize(code):
             value = value.replace("\\t", "\t")
             value = value.replace("\"", '"')
             value = value.replace("\\", '\ ')
-
+            continue
         elif kind == 'close' and value in reserved_symbols:
             kind = value
         elif kind == "code_block":
@@ -132,8 +135,6 @@ def tokenize(code):
         #         error = f'Lexical Error at Line: {line_num} Column: {column}: Block must be in newline and indented'
         #         kind = 'invalid'
         #         value = ':'
-        elif kind == 'comment':
-            print("comment")
         elif kind == 'newline':
             line_start = mo.end()
             line_num += 1
@@ -153,7 +154,6 @@ def tokenize(code):
             
             value = ' '
         elif kind == 'mismatch':
-            print("whut")
             error = f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value'
             kind = 'invalid'
             # raise RuntimeError(f'{value} unexpected on line {line_num}')
@@ -206,15 +206,25 @@ def tokenize(code):
     for (type, value, line_num, column, er, specification) in zip(L_type, L_value, L_line, L_column, L_error, L_specification):
         
         if L_value[-2] == L_value[count]:
+            print("whut")
+            if L_type[-2] == "operators" and L_value[count] not in reserved_symbols:
+                print("hmmm")
+                temp_type[count] = "invalid"
+                L_type = temp_type
+                temp_error[count] = f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value'
+                L_error = temp_error
+            
             pass
         elif type == "digit_lit"  and (L_value[count+1] in delimiters["digit_delim"] or L_value[count+1] == "\n"):
             pass
         elif type == "float_lit" and (L_value[count+1] in delimiters["float_delim"] or L_value[count+1] == "\n"):
             pass
-        elif type == "comment" and (L_value[count+1] == '\n' or L_value[count+1] == ' ' or L_value[count+1] == '\t'):
+        elif type == "comment" and (L_value[count+1] in delimiters["whitespace"]):
+            pass
+        elif type == "multi_comment" and (L_value[count+1] in delimiters["whitespace"] or L_value[count+1] in keywords):
             pass
         elif type in keywords:
-            if (value == "break" or value == "continue" or value == "global" or value == "group" or value == "in" or value == "group" or value == "void") \
+            if (value == "break" or value == "continue" ) \
             and (L_value[count+1] in delimiters["whitespace"] or L_value[count+1] in list_id):
                 pass
             elif (value == "boolean" or value == "digit" or value == "float" or value == "read" or value == "embark" or value == "string" or value == "trojan") \
@@ -227,7 +237,7 @@ def tokenize(code):
                 pass
             elif value == "else" and L_value[count+1] in delimiters["start_block"]:
                 pass
-            elif value == "index" and L_value[count+1] == " " or L_value[count+1] == "":
+            elif (value == "index" or value == "fixed" or value == "global" or value == "group" or value == "in" or value == "void") and L_value[count+1] == " ":
                 pass
             else:
                 temp_type[count] = "invalid"
@@ -242,15 +252,13 @@ def tokenize(code):
             if (value == "+" or value == "-" or value == "*" or value == "^" or value == "/" or value == "%" or value == ">" or value == "<" or value == "!" or value == "//") \
             and (L_value[count+1] in delimiters["arith_delim"] or L_type[count+1] in list_id or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit"):
                 pass
-            elif (value == "+=" or value == "-=" or value == "*=" or value == "^=" or value == "/=" or value == "%=" or value == ">=" or value == "<=" or value == "!="  or value =='&&' or value =='||') \
+            elif (value == "==" or value == "+=" or value == "-=" or value == "*=" or value == "^=" or value == "/=" or value == "%=" or value == ">=" or value == "<=" or value == "!="  or value =='&&' or value =='||') \
             and (L_value[count+1] in delimiters["assign_delim"] or L_type[count+1] in list_id or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit"):
                 pass
             elif (value == "++" or value == "--") \
             and (L_value[count+1] in delimiters["unary_delim"] or L_type[count+1] in list_id or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit"):
                 pass
             elif (value == "=" ) and (L_value[count+1] in delimiters["equal_delim"] or L_type[count+1] in list_id or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit"):
-                pass
-            elif (value == "==" ) and (L_value[count+1] in delimiters["asign_delim"] or L_type[count+1] in list_id or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit"):
                 pass
             elif value == "[" and L_value[count+1] in delimiters["openb_delim"] or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit" or L_type[count+1] == "string_lit" or  L_type[count+1] in list_id:
                 pass
@@ -285,8 +293,6 @@ def tokenize(code):
             pass
         elif value == " ":
             pass
-        elif type == "comment" and L_type[count+1] != 'newline':
-            L_type[count+1] = "comment"
 
         # if value[-1] == value:
         #     if type == ":" and (L_value[count+1] == '\n' or L_value[count+1] != ' '):
