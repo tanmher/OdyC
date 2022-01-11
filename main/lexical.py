@@ -12,6 +12,7 @@ class Token(NamedTuple):
     column: int
     error: str
 
+
 def tokenize(code):
     L_type = []
     L_specification = []
@@ -20,29 +21,29 @@ def tokenize(code):
     L_column = []
     L_error = []
 
-    keywords = {"boolean", "boot","break", "continue", "digit","if", "elif", "else",
-                "embark", "FALSE", "fixed", "float", "for", "global", "group", "if", "index",
-                "in", "pair", "parallel", "read","remove", "return", "skip", "string",
-                "trojan", "TRUE", "void", "while"
+    keywords = {"boolean", "boot","break", "continue", "digit","if", "elf", "else",
+                "embark", "FALSE", "fixed", "float", "for", "global", "group", "if", "codex",
+                "in", "pair", "parallel", "read","remove", "return", "route","skip", "string",
+                "TROJAN", "TRUE", "void", "while", "HALT"
     }
 
     reserved_symbols = {'+', '-', '*', '^', '/', '//', '%', '=','==', '+=', '-=', '*=', '^=', '/=', '//=', '%=', '=', '!=', '>', '<', '>=', '<=','&&',
-                        '||', '!', '++', '--', '(', ')', '#', '[', ']', ':', ','
+                        '||', '!', '++', '--', '(', ')', '#', '[', ']', ':', ',', '{', '}'
     }
 
 
     token_specification = [
         ('digits',      r'\d+(\.\d*)?'),                    # Integer or decimal number
-        ('id',          r'[A-Za-z0-9]+'),                   # Identifiers
+        ('id',          r'[A-Za-z0-9_]+'),                   # Identifiers
         ('string_lit',  r'\"[ -~][ -~]+\"'),                # String Literals
-        ('operators',    r'[+\-*^/%&\|=\,><]+'),   # Operators
+        ('operators',    r'[+\-*^/%&\|=\,><!]+'),   # Operators
         ('close',       r'[\(\)\[\]\{\}]'),
         #('start',       r':+(\n[ \t]+)+'),                  # Start of code block 
         ('code_block',  r':'),                               # Start of code block 
         ('newline',     r'\n'),                             # New line
         ('whitespace',  r'[ \t]+'),                         # Skip over spaces and tabs
-        ('comment',      r'#[^#\n]+'),
-        ('multi_comment',r'###[ -~\n]+###'),                 # Comment
+        ('comment',      r'#[ -~]*'),
+        ('multi_comment',r'###\n[ -~\n]+###'),                 # Comment
         ('mismatch',    r'.'),                              # Any other character
     ]
     
@@ -78,7 +79,10 @@ def tokenize(code):
                 error = f'Lexical Error at Line: {line_num} Column: {column}: Maximum character for identifiers is 20'
                 kind = 'invalid'
             elif value in keywords:
-                kind = value
+                if value == "TRUE" or value == "FALSE":
+                    kind = 'bool_lit'
+                else:
+                    kind = value
             elif value in list_id.values(): 
                 for key, val in list_id.items():
                     if val == value:
@@ -99,7 +103,6 @@ def tokenize(code):
             value = value.replace("\\t", "\t")
             value = value.replace("\"", '"')
             value = value.replace("\\", '\ ')
-            continue
         elif kind == 'close' and value in reserved_symbols:
             kind = value
         elif kind == "code_block":
@@ -172,6 +175,7 @@ def tokenize(code):
         "return_delim": [" ", '\t', "\n", "("],
         "arith_delim":[" ", '\t', "\n", "(", "digit_lit", "float_lit"], # add identifiers (lowercase and uppercase)
         "relation_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit"], # add identifiers (lowercase and uppercase)
+        "log_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit", "("],
         "equal_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit", "{", "\""], # add identifiers (lowercase and uppercase)
         "assign_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit"],  # add identifiers (lowercase and uppercase)
         "unary_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit", "\""], # add identifiers (lowercase and uppercase)
@@ -180,20 +184,21 @@ def tokenize(code):
 
         "openp_delim": [" ", "~", "\"", "+", "-", "(", ")", "!" , "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", 
                         "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "4", "8", "6"],
-        "closep_delim": [" ", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", ")", ":", "]"],
+        "closep_delim": [" ", "\t", "\n", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", ")", ":", "]"],
         
         "openb_delim": [" ", "+", "-", "(", "]", "\"", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", 
                         "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "4", "8", "6"], # add literals (digit, float, string, bool)
         "closeb_delim": [" ", "\t", "\n",",", ".", "=","+","-","^","*","%","//","/", ">", "<", "["],
 
-        "openc_delim": [" ", '\t', "\n", "\""],
-        "closec_delim": [" ", '\t', "\n",],
+        "openc_delim": [" ", "\t", "\n", "\""],
+        "closec_delim": [" ", "\t", "\n", "\"","a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", 
+                        "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "4", "8", "6" ],
 
-        "id_delim": [" ", '\t', "\n", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", "[", "(", ")","++","--","==", '+=', '-=', '*=', '^=', '/=', '//=', '%=', '!=', '>=', '<=','&&','||', ":"],
+        "id_delim": [" ", '\t', "\n", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", "[", "(", ")", "!","++","--","==", '+=', '-=', '*=', '^=', '/=', '//=', '%=', '!=', '>=', '<=','&&','||', ":"],
         
         "terminator_delim": [" ", '\t', "\n", "lowercase", "+", "-", "!", "#","(", ")",";"],
 
-        "digit_delim": [" ", '\t', "\n", "=","+","-","^","*","%","//","/", ")", "}", "]", ":"],
+        "digit_delim": [" ", '\t', "\n", ",", "=","+","-","^","*","%","//","/", ")", "}", "]", ":"],
         "float_delim": [" ", '\t', "\n", "=","+","-","^","*","%","//","/", ")", "}", ":"],
         "bool_delim": [" ", '\t', "\n", ",", "}", ")"],
         "string_delim": [" ", '\t', "\n", ",", "}", ")", "+", "]"],
@@ -206,7 +211,6 @@ def tokenize(code):
     for (type, value, line_num, column, er, specification) in zip(L_type, L_value, L_line, L_column, L_error, L_specification):
         
         if L_value[-2] == L_value[count]:
-            print("whut")
             if L_type[-2] == "operators" and L_value[count] not in reserved_symbols:
                 print("hmmm")
                 temp_type[count] = "invalid"
@@ -227,7 +231,7 @@ def tokenize(code):
             if (value == "break" or value == "continue" ) \
             and (L_value[count+1] in delimiters["whitespace"] or L_value[count+1] in list_id):
                 pass
-            elif (value == "boolean" or value == "digit" or value == "float" or value == "read" or value == "embark" or value == "string" or value == "trojan") \
+            elif (value == "boolean" or value == "digit" or value == "float" or value == "read" or value == "embark" or value == "string" or value == "TROJAN") \
             and L_value[count+1] == "(":
                 pass
             elif (value == "elif" or value == "for" or value == "if" or value == "pair" or value == "parallel" or value == "while" or value == "route") \
@@ -237,7 +241,9 @@ def tokenize(code):
                 pass
             elif value == "else" and L_value[count+1] in delimiters["start_block"]:
                 pass
-            elif (value == "index" or value == "fixed" or value == "global" or value == "group" or value == "in" or value == "void") and L_value[count+1] == " ":
+            elif (value == "codex" or value == "fixed" or value == "global" or value == "group" or value == "in" or value == "void") and L_value[count+1] == " ":
+                pass
+            elif value == "HALT" and L_value[count+1] in delimiters["whitespace"]:
                 pass
             else:
                 temp_type[count] = "invalid"
@@ -248,7 +254,6 @@ def tokenize(code):
                 L_error = temp_error
 
         elif value in reserved_symbols:
-            
             if (value == "+" or value == "-" or value == "*" or value == "^" or value == "/" or value == "%" or value == ">" or value == "<" or value == "!" or value == "//") \
             and (L_value[count+1] in delimiters["arith_delim"] or L_type[count+1] in list_id or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit"):
                 pass
@@ -268,17 +273,19 @@ def tokenize(code):
                 pass
             elif value == ")" and L_value[count+1] in delimiters["closep_delim"]:
                 pass
-            elif value == "{" and L_value[count+1] in delimiters["openc_delim"] or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit" or L_type[count+1] == "string_lit" or  L_type[count+1] in list_id:
+            elif value == "{" and (L_value[count+1] in delimiters["openc_delim"] or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit" or L_type[count+1] == "string_lit" or  L_type[count+1] in list_id):
                 pass
             elif value == "}" and L_value[count+1] in delimiters["closec_delim"]:
                 pass
             elif value == "'" and L_value[count+1] in delimiters["closec_delim"]:
                 pass
-            elif value == "\"" and L_value[count+1] in delimiters["ascii"]:
+            elif value == "\"" and L_value[count+1] in delimiters["ascii"] or L_value[count+1] in delimiters["whitespace"] or L_value[count+1] == ":":
                 pass
             elif type == ":" and (L_value[count+1] == '\n' or L_value[count+1] == ' ' or L_value[count+1] == '\t'):
                 pass
             elif value == "," and L_value[count+1] in delimiters["comma_delim"]:
+                pass
+            elif value == "!" and (L_value[count] in delimiters["log_delim"] or L_type[count+1] in list_id):
                 pass
             else:
                 temp_type[count] = "invalid"
@@ -293,7 +300,6 @@ def tokenize(code):
             pass
         elif value == " ":
             pass
-
         # if value[-1] == value:
         #     if type == ":" and (L_value[count+1] == '\n' or L_value[count+1] != ' '):
         #         pass
@@ -308,7 +314,6 @@ def tokenize(code):
             pass
         
         else:
-            print("waeyo")
             temp_type[count] = "invalid"
             #temp_type = [a.replace(value, "invalid") for a in L_type]
             L_type = temp_type
