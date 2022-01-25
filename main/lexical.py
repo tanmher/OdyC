@@ -171,7 +171,7 @@ def tokenize(code):
     delimiters = {
         "whitespace": [" ", '\t', "\n"],
         "start_block": ":",
-        "start_delim": [" ", '\t', "\n", ":", "("],
+        "start_delim": [" ", '\t', "\n", "("],
         "return_delim": [" ", '\t', "\n", "("],
         "arith_delim":[" ", '\t', "\n", "(", "digit_lit", "float_lit"], # add identifiers (lowercase and uppercase)
         "relation_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit"], # add identifiers (lowercase and uppercase)
@@ -234,7 +234,7 @@ def tokenize(code):
             elif (value == "boolean" or value == "digit" or value == "float" or value == "read" or value == "embark" or value == "string" or value == "TROJAN") \
             and L_value[count+1] == "(":
                 pass
-            elif (value == "elif" or value == "for" or value == "if" or value == "pair" or value == "parallel" or value == "while" or value == "route") \
+            elif (value == "elf" or value == "for" or value == "if" or value == "pair" or value == "parallel" or value == "while" or value == "route") \
             and L_value[count+1] in delimiters["start_delim"]:
                 pass
             elif (value == "FALSE" or value == "TRUE") and L_value[count+1] in delimiters["bool_delim"]:
@@ -244,6 +244,8 @@ def tokenize(code):
             elif (value == "codex" or value == "fixed" or value == "global" or value == "group" or value == "in" or value == "void") and L_value[count+1] == " ":
                 pass
             elif value == "HALT" and L_value[count+1] in delimiters["whitespace"]:
+                pass
+            elif value == "return" and L_value[count+1] in delimiters["start_delim"]:
                 pass
             else:
                 temp_type[count] = "invalid"
