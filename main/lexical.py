@@ -21,14 +21,14 @@ def tokenize(code):
     L_column = []
     L_error = []
 
-    keywords = {"boolean", "boot","break", "continue", "digit","if", "elf", "else",
-                "embark", "FALSE", "fixed", "float", "for", "global", "group", "if", "codex",
+    keywords = {"boolean", "boot","break","codex", "continue", "digit","if", "elf", "else",
+                "embark", "FALSE", "fixed", "float", "for", "global", "group", "if", 
                 "in", "pair", "parallel", "read","remove", "return", "route","skip", "string",
-                "TROJAN", "TRUE", "void", "while", "HALT"
+                "TROJAN", "TRUE", "while", "HALT"
     }
 
     reserved_symbols = {'+', '-', '*', '^', '/', '//', '%', '=','==', '+=', '-=', '*=', '^=', '/=', '//=', '%=', '=', '!=', '>', '<', '>=', '<=','&&',
-                        '||', '!', '++', '--', '(', ')', '#', '[', ']', ':', ',', '{', '}'
+                        '||', '!', '++', '--', '(', ')', '#', '[', ']', ':', ',', '{', '}', ';',
     }
 
 
@@ -37,6 +37,7 @@ def tokenize(code):
         ('id',          r'[A-Za-z0-9_]+'),                   # Identifiers
         ('string_lit',  r'\"[ -~][ -~]+\"'),                # String Literals
         ('operators',    r'[+\-*^/%&\|=\,><!]+'),   # Operators
+        ('terminator',  r';'),
         ('close',       r'[\(\)\[\]\{\}]'),
         #('start',       r':+(\n[ \t]+)+'),                  # Start of code block 
         ('code_block',  r':'),                               # Start of code block 
@@ -107,6 +108,8 @@ def tokenize(code):
             kind = value
         elif kind == "code_block":
             kind = ':'
+        elif kind == "terminator":
+            kind = ';'
         # elif kind == 'start':
         #     tab_count = value.count('\t')
         #     indent_count.append(tab_count)
@@ -178,66 +181,67 @@ def tokenize(code):
         "log_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit", "("],
         "equal_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit", "{", "\""], # add identifiers (lowercase and uppercase)
         "assign_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit"],  # add identifiers (lowercase and uppercase)
-        "unary_delim": [" ", '\t', "\n", "(", "digit_lit", "float_lit", "\""], # add identifiers (lowercase and uppercase)
+        "unary_delim": [" ", '\t', "\n", ";", "(", ")", "digit_lit", "float_lit", "\""], # add identifiers (lowercase and uppercase)
 
         "comma_delim": [" ", '\t', "\n", "+", "-" , "{", "!", ],
 
-        "openp_delim": [" ", "~", "\"", "+", "-", "(", ")", "!" , "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", 
+        "openp_delim": [" ", "~", "\"", "+", "-", "++", "--", "(", ")", "!" , "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", 
                         "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "4", "8", "6"],
-        "closep_delim": [" ", "\t", "\n", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", ")", ":", "]"],
+        "closep_delim": [" ", "\t", "\n", ";", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", ")", ":", "]"],
         
         "openb_delim": [" ", "+", "-", "(", "]", "\"", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", 
                         "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "4", "8", "6"], # add literals (digit, float, string, bool)
-        "closeb_delim": [" ", "\t", "\n",",", ".", "=","+","-","^","*","%","//","/", ">", "<", "["],
+        "closeb_delim": [" ", "\t", "\n",";",",", ".", "=","+","-","^","*","%","//","/", ">", "<", "["],
 
         "openc_delim": [" ", "\t", "\n", "\""],
         "closec_delim": [" ", "\t", "\n", "\"","a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", 
                         "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "4", "8", "6" ],
 
-        "id_delim": [" ", '\t', "\n", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", "[", "(", ")", "!","++","--","==", '+=', '-=', '*=', '^=', '/=', '//=', '%=', '!=', '>=', '<=','&&','||', ":"],
+        "id_delim": [" ", '\t', "\n", ";", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", "[", "(", ")", "!","++","--","==", '+=', '-=', '*=', '^=', '/=', '//=', '%=', '!=', '>=', '<=','&&','||', ":"],
         
-        "terminator_delim": [" ", '\t', "\n", "lowercase", "+", "-", "!", "#","(", ")",";"],
+        "terminator_delim": [" ", ";"],
 
-        "digit_delim": [" ", '\t', "\n", ",", "=","+","-","^","*","%","//","/", ")", "}", "]", ":"],
-        "float_delim": [" ", '\t', "\n", "=","+","-","^","*","%","//","/", ")", "}", ":"],
-        "bool_delim": [" ", '\t', "\n", ",", "}", ")"],
-        "string_delim": [" ", '\t', "\n", ",", "}", ")", "+", "]"],
+        "digit_delim": [" ", '\t', "\n", ";", ",", "=","+","-","^","*","%","//","/", ")", "}", "]", ":"],
+        "float_delim": [" ", '\t', "\n", ";", "=","+","-","^","*","%","//","/", ")", "}", ":"],
+        "bool_delim": [" ", '\t', "\n",";", ",", "}", ")"],
+        "string_delim": [" ", '\t', "\n", ";", ",", "}", ")", "+", "]"],
         "ascii": string.printable
     }
 
     count = 0
     temp_type = L_type
     temp_error = L_error
-    for (type, value, line_num, column, er, specification) in zip(L_type, L_value, L_line, L_column, L_error, L_specification):
-        
+    for (type, value, line_num, column) in zip(L_type, L_value, L_line, L_column):
+
         if L_value[-2] == L_value[count]:
             if L_type[-2] == "operators" and L_value[count] not in reserved_symbols:
-                print("hmmm")
                 temp_type[count] = "invalid"
                 L_type = temp_type
                 temp_error[count] = f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value'
                 L_error = temp_error
             
             pass
+        elif type in list_id and L_value[count+1] in delimiters["id_delim"]:
+            pass
         elif type == "digit_lit"  and (L_value[count+1] in delimiters["digit_delim"] or L_value[count+1] == "\n"):
             pass
         elif type == "float_lit" and (L_value[count+1] in delimiters["float_delim"] or L_value[count+1] == "\n"):
             pass
+        elif type == "bool_lit" and L_value[count+1] in delimiters["bool_delim"]:
+                pass
         elif type == "comment" and (L_value[count+1] in delimiters["whitespace"]):
             pass
         elif type == "multi_comment" and (L_value[count+1] in delimiters["whitespace"] or L_value[count+1] in keywords):
             pass
         elif type in keywords:
-            if (value == "break" or value == "continue" ) \
-            and (L_value[count+1] in delimiters["whitespace"] or L_value[count+1] in list_id):
+            if (value == "break" or value == "continue" or value == "skip") \
+            and (L_value[count+1] in delimiters["terminator_delim"]):
                 pass
             elif (value == "boolean" or value == "digit" or value == "float" or value == "read" or value == "embark" or value == "string" or value == "TROJAN") \
             and L_value[count+1] == "(":
                 pass
             elif (value == "elf" or value == "for" or value == "if" or value == "pair" or value == "parallel" or value == "while" or value == "route") \
             and L_value[count+1] in delimiters["start_delim"]:
-                pass
-            elif (value == "FALSE" or value == "TRUE") and L_value[count+1] in delimiters["bool_delim"]:
                 pass
             elif value == "else" and L_value[count+1] in delimiters["start_block"]:
                 pass
@@ -297,8 +301,6 @@ def tokenize(code):
                 #temp_error = [e.replace(L_error[count], f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value') for e in L_error]
                 L_error = temp_error
         elif type == "string_lit" and L_value[count+1] in delimiters["string_delim"]:
-            pass
-        elif type in list_id and L_value[count+1] in delimiters["id_delim"]:
             pass
         elif value == " ":
             pass
