@@ -237,13 +237,13 @@ def tokenize(code):
             if (value == "break" or value == "continue" or value == "skip") \
             and (L_value[count+1] in delimiters["terminator_delim"]):
                 pass
-            elif (value == "boolean" or value == "digit" or value == "float" or value == "read" or value == "embark" or value == "string" or value == "TROJAN") \
+            elif (value == "boolean" or value == "digit" or value == "float" or value == "read" or value == "embark" or value == "string" ) \
             and L_value[count+1] == "(":
                 pass
             elif (value == "elf" or value == "for" or value == "if" or value == "pair" or value == "parallel" or value == "while" or value == "route") \
             and L_value[count+1] in delimiters["start_delim"]:
                 pass
-            elif value == "else" and L_value[count+1] in delimiters["start_block"]:
+            elif (value == "else" or value == "TROJAN") and L_value[count+1] in delimiters["start_block"]:
                 pass
             elif (value == "codex" or value == "fixed" or value == "global" or value == "group" or value == "in" or value == "void") and L_value[count+1] == " ":
                 pass
