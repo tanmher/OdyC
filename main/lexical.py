@@ -45,10 +45,9 @@ def tokenize(code):
         ('id',          r'[A-Za-z0-9_]+'),                   # Identifiers
         ('string_lit',  r'\"[ -~][ -~]+\"'),                # String Literals
         ('operators',    r'(==|\+=|-=|\*=|\^=|/=|%=|!=|>|<|>=|<=|&&|\|\||!|--|\+\+|=|\+|-|\*|\^|//|/|%)'),   # Operators
-        ('terminator',  r';'),
+        ('symbols',     r'[;\.:]'),
         ('close',       r'[\(\)\[\]\{\}]'),
         #('start',       r':+(\n[ \t]+)+'),                  # Start of code block 
-        ('code_block',  r':'),                               # Start of code block 
         ('newline',     r'\n'),                             # New line
         ('whitespace',  r'[ \t]+'),                         # Skip over spaces and tabs
         ('comment',      r'#[ -~]*'),
@@ -110,10 +109,8 @@ def tokenize(code):
             value = value.replace("\\", '\ ')
         elif kind == 'close' and value in reserved_symbols:
             kind = value
-        elif kind == "code_block":
-            kind = ':'
-        elif kind == "terminator":
-            kind = ';'
+        elif kind == "symbols":
+            kind = value
         # elif kind == 'start':
         #     tab_count = value.count('\t')
         #     indent_count.append(tab_count)
@@ -258,7 +255,7 @@ def tokenize(code):
                 L_error = temp_error
 
         elif value in reserved_symbols:
-            if (value == "+" or value == "-" or value == "*" or value == "^" or value == "/" or value == "%" or value == "!" or value == "//") \
+            if (value == "+" or value == "-" or value == "*" or value == "^" or value == "/" or value == "%" or value == "//") \
             and (L_value[count+1] in delimiters["arith_delim"] or L_type[count+1] in list_id or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit"):
                 pass
             elif (value == "+=" or value == "-=" or value == "*=" or value == "^=" or value == "/=" or value == "%=") \
@@ -275,7 +272,7 @@ def tokenize(code):
                 pass
             elif (value == "=" ) and (L_value[count+1] in delimiters["equal_delim"] or L_type[count+1] in list_id or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit"):
                 pass
-            elif value == "[" and L_value[count+1] in delimiters["openb_delim"] or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit" or L_type[count+1] == "string_lit" or  L_type[count+1] in list_id:
+            elif value == "[" and (L_value[count+1] in delimiters["openb_delim"] or L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit" or L_type[count+1] == "string_lit" or  L_type[count+1] in list_id):
                 pass
             elif value == "]" and L_value[count+1] in delimiters["closeb_delim"]:
                 pass
@@ -287,9 +284,9 @@ def tokenize(code):
                 pass
             elif value == "}" and L_value[count+1] in delimiters["closec_delim"]:
                 pass
-            elif value == "'" and L_value[count+1] in delimiters["closec_delim"]:
+            elif value == "\'" and L_value[count+1] in delimiters["closec_delim"]:
                 pass
-            elif value == "\"" and L_value[count+1] in delimiters["ascii"] or L_value[count+1] in delimiters["whitespace"] or L_value[count+1] == ":":
+            elif value == "\"" and (L_value[count+1] in delimiters["ascii"] or L_value[count+1] in delimiters["whitespace"] or L_value[count+1] == ":"):
                 pass
             elif type == ":" and (L_value[count+1] == '\n' or L_value[count+1] == ' ' or L_value[count+1] == '\t'):
                 pass
@@ -297,7 +294,7 @@ def tokenize(code):
                 pass
             elif value == "!" and (L_value[count] in delimiters["log_delim"] or L_type[count+1] in list_id):
                 pass
-            elif value == "." and ( L_type[count+1] in list_id):
+            elif value == "." and (L_type[count+1] in list_id):
                 pass
             else:
                 temp_type[count] = "invalid"
