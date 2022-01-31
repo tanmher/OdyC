@@ -1,3 +1,4 @@
+from ast import operator
 from typing import NamedTuple
 import re
 import classlist
@@ -27,16 +28,23 @@ def tokenize(code):
                 "TROJAN", "TRUE", "while", "HALT"
     }
 
-    reserved_symbols = ['+', '-', '*', '^', '/', '//', '%', '=','==', '+=', '-=', '*=', '^=', '/=', '//=', '%=', '=', '!=', '>', '<', '>=', '<=','&&',
+    reserved_symbols = ['+', '-', '*', '^', '/', '//', '%', '=','+=', '-=', '*=', '^=', '/=', '//=', '%=', '==', '!=', '>', '<', '>=', '<=','&&',
                         '||', '!', '++', '--', '(', ')', '#', '[', ']', ':', ',', '{', '}', ';', '.'
     ]
-
+    operators = {
+        'arithmetic': ['+-', '*', '^', '/', '//', '%' ],
+        'assignment':[ '=','==', '+=', '-=', '*=', '^=', '/=', '//=', '%=' ],
+        'relational': [ '==', '!=', '>', '<', '>=', '<=' ],
+        'logical': [ '&&', '||', '!' ],
+        'unarry': [ '++', '--' ]
+    }
+    
 
     token_specification = [
         ('digits',      r'\d+(\.\d*)?'),                    # Integer or decimal number
         ('id',          r'[A-Za-z0-9_]+'),                   # Identifiers
         ('string_lit',  r'\"[ -~][ -~]+\"'),                # String Literals
-        ('operators',    r'[+\-*^/%&\|=\,><!]+'),   # Operators
+        ('operators',    r'(==|\+=|-=|\*=|\^=|/=|%=|!=|>|<|>=|<=|&&|\|\||!|--|\+\+|\+|-|\*|\^|//|/|%)'),   # Operators
         ('terminator',  r';'),
         ('close',       r'[\(\)\[\]\{\}]'),
         #('start',       r':+(\n[ \t]+)+'),                  # Start of code block 
@@ -191,7 +199,7 @@ def tokenize(code):
         
         "openb_delim": [" ", "+", "-", "(", "]", "[", "\"", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", 
                         "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "4", "8", "6"], # add literals (digit, float, string, bool)
-        "closeb_delim": [" ", "\t", "\n",";",",", ".", "=","+","-","^","*","%","//","/", ">", "<", "[", ")"],
+        "closeb_delim": [" ", "\t", "\n",";",",", ".", "=","+","-","^","*","%","//","/", ">", "<", "[", "]", ")"],
 
         "openc_delim": [" ", "\t", "\n", "\"", "}"],
         "closec_delim": [" ", "\t", "\n", "\"", ";","a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", 
@@ -199,7 +207,7 @@ def tokenize(code):
 
         "id_delim": [" ", '\t', "\n", ";", ",", ".", "=","+","-","^","*","%","//","/", ">", "<", "[", "]", "(", ")", "!","++","--","==", '+=', '-=', '*=', '^=', '/=', '//=', '%=', '!=', '>=', '<=','&&','||', ":"],
         
-        "terminator_delim": [" ", ";"],
+        "terminator_delim": [" "],
 
         "digit_delim": [" ", '\t', "\n", ";", ",", "=","+","-","^","*","%","//","/", ")", "}", "]", ":"],
         "float_delim": [" ", '\t', "\n", ";", "=","+","-","^","*","%","//","/", ")", "}", ":", ","],
@@ -302,6 +310,18 @@ def tokenize(code):
                 temp_error[count] = f'Lexical Error at Line: {line_num} Column: {column}: Found an unexpected value after this token'
                 #temp_error = [e.replace(L_error[count], f'Lexical Error at Line: {line_num} Column: {column}: Unexpected value') for e in L_error]
                 L_error = temp_error
+        elif value in operators:
+            if value in operator['arithmetic'] and L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit" or L_type[count+1] == "string_lit" or  L_type[count+1] == 'bool_lit':
+                pass
+            elif value in operator['assignment'] and L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit" or L_type[count+1] == "string_lit" or  L_type[count+1] == 'bool_lit':
+                pass
+            elif value in operator['relational'] and L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit" or L_type[count+1] == "string_lit" or  L_type[count+1] == 'bool_lit':
+                pass
+            elif value in operator['logical'] and L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit" or L_type[count+1] == "string_lit" or  L_type[count+1] == 'bool_lit':
+                pass
+            elif value in operator['unary'] and L_type[count+1] == "digit_lit" or L_type[count+1] == "float_lit" or L_type[count+1] == "string_lit" or  L_type[count+1] == 'bool_lit':
+                pass
+
         elif type == "string_lit" and L_value[count+1] in delimiters["string_delim"]:
             pass
         elif value == " ":
