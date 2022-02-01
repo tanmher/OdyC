@@ -44,7 +44,7 @@ def tokenize(code):
         ('digits',      r'\d+(\.\d*)?'),                    # Integer or decimal number
         ('id',          r'[A-Za-z0-9_]+'),                   # Identifiers
         ('string_lit',  r'\"[ -~][ -~]+\"'),                # String Literals
-        ('operators',    r'(==|\+=|-=|\*=|\^=|/=|%=|!=|>|<|>=|<=|&&|\|\||!|--|\+\+|=|\+|-|\*|\^|//|/|%)'),   # Operators
+        ('operators',    r'(==|\+=|-=|\*=|\^=|/=|%=|!=|>=|<=|&&|\|\||!|--|\+\+|>|<|=|\+|-|\*|\^|//|/|%)'),   # Operators
         ('symbols',     r'[;\.:,]'),
         ('close',       r'[\(\)\[\]\{\}]'),
         #('start',       r':+(\n[ \t]+)+'),                  # Start of code block 
