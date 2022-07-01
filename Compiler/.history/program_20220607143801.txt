@@ -1,0 +1,7 @@
+TROJAN;
+VAR a=1;
+HALT
+
+TROJAN;
+VAR a= "This is a \"String\""";
+HALT
